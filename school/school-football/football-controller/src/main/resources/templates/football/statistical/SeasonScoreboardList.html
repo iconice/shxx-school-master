@@ -1,0 +1,226 @@
+<section class="content-header">
+    <ol class="breadcrumb">
+        <li><a href="#"><i class="fa fa-dashboard"></i> 首页</a></li>
+        <li><a href="#">数据统计</a></li>
+        <li class="active">赛季积分榜</li>
+    </ol>
+</section>
+<section class="content">
+    <div class="jax-box">
+        <form id="formSearch" class="form-horizontal form-search">
+            <div class="form-group">
+                <div class="col-md-3 col-xs-6">
+                    <label class="col-sm-3 control-label">类型:</label>
+                    <div class="col-xs-6">
+                        <select id="category" name="category" class="form-control" onchange="switchCategory()">
+                            <option value="1">天天见赛</option>
+                            <option value="3">课堂赛</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3 col-xs-6">
+                    <label class="col-sm-3 control-label">选择届:</label>
+                    <div class="col-xs-6">
+                        <select id="gradeId" name="gradeId" class="form-control" onchange="switchPeriod()">
+                            <option th:each="supplier : ${grades}" th:value="${supplier.gradeId}"
+                                    th:text="${supplier.gradeName}">
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3 col-xs-6 classId_class">
+                    <label  class="control-label  col-sm-3" for="classId">班级 :</label>
+                    <div class="col-xs-6">
+                        <select class="form-control" id="classId" onchange="switchClass()">
+
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3 col-xs-6">
+                    <label class="control-label  col-xs-3" for="seasonId">赛季:</label>
+                    <div class="col-xs-6">
+                        <select class="form-control" id="seasonId" onchange="switchType()">
+                            <option th:each="supplier : ${seasons}" th:value="${supplier.seId}"
+                                    th:text="${supplier.seName}">
+                            </option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="jax-box jax-box-table">
+        <!--  数据列表 -->
+        <table id="table"></table>
+    </div>
+</section>
+
+<script>
+
+    var columns = [
+        {
+            field: 'top',
+            title: '排名',
+            align: "center",
+            formatter: function (value, row, index) {
+                return index + 1;
+            }
+        }, {
+            field: 'teamName',
+            title: '球队名称',
+            align: "center"
+        }, {
+            field: 'score',
+            title: '积分',
+            align: "center"
+        }, {
+            field: 'teamName',
+            title: '所在球队',
+            align: "center"
+        }, {
+            field: 'batchNo',
+            title: '最新完成轮次',
+            align: "center",
+            formatter: function (value, row, index) {
+                if (row.batchNo == 1) {
+                    return "第一轮";
+                }
+                if (row.batchNo == 2) {
+                    return "第二轮";
+                }
+                if (row.batchNo == 3) {
+                    return "第三轮";
+                }
+                if (row.batchNo == 4) {
+                    return "第四轮";
+                }
+                if (row.batchNo == 5) {
+                    return "第五轮";
+                }
+                if (row.batchNo == 6) {
+                    return "第六轮";
+                }
+                if (row.batchNo == 7) {
+                    return "第七轮";
+                }
+                if (row.batchNo == 8) {
+                    return "第八轮";
+                }
+                if (row.batchNo == 9) {
+                    return "第九轮";
+                }
+                if (row.batchNo == 11) {
+                    return "第十轮";
+                }
+                if (row.batchNo == 12) {
+                    return "第十一轮";
+                }
+                if (row.batchNo == 13) {
+                    return "第十二轮";
+                }
+                if (row.batchNo == 10) {
+                    return "第十三轮";
+                }
+                if (row.batchNo == 14) {
+                    return "第十四轮";
+                }
+                if (row.batchNo == 15) {
+                    return "第十五轮";
+                }
+                if (row.batchNo == 16) {
+                    return "第十六轮";
+                }
+                if (row.batchNo == 17) {
+                    return "第十七轮";
+                }
+                if (row.batchNo == 18) {
+                    return "第十八轮";
+                }
+                if (row.batchNo == 19) {
+                    return "第十九轮";
+                }
+                if (row.batchNo == 20) {
+                    return "第二十轮";
+                }
+
+                if (row.batchNo == 0) {
+                    return "未开始";
+                }
+            }
+        }];
+    var options = {
+        id: "#table",
+        url: '/statistical/event/getSeasonScoreboardList',
+        columns: columns,
+        toolbar: '#toolbar',
+        showRefresh: true,
+        queryParams: queryParams
+    }
+    // 加载列表
+    Core.initTable(options);
+    /*查询用户参数*/
+    function queryParams(params) {
+        var temp = { //这里的键的名字和控制器的变量名必须一致，这边改动，控制器也需要改成一样的
+            limit: params.limit, //页面大小
+            offset: params.offset, //页码
+            gradeId: $("#gradeId").val(),
+            classId: $("#classId").val(),
+            category: $("#category").val(),
+            seasonId: $("#seasonId").val()
+        };
+        return temp;
+    }
+
+    $(function () {
+        getClassList();
+        switchCategory();
+    });
+
+    // 切换类型
+    function switchCategory() {
+        var category = $("#category").val();
+        if (category == 3) {
+            getClassList();
+            $(".classId_class").show();
+        } else {
+            document.getElementById("classId").options.length = 0;
+            $(".classId_class").hide();
+        }
+        Core.refreshTable("#table");
+    }
+    // 切换年级
+    function switchPeriod() {
+        Core.refreshTable("#table");
+        getClassList();
+    };
+    // 切换班级
+    function switchClass() {
+        Core.refreshTable("#table");
+    }
+
+    function switchType() {
+        Core.refreshTable("#table");
+    }
+    /*查询班级*/
+    function getClassList() {
+        var gradeId = $("#gradeId").val();
+        $.ajax({
+            type: 'GET',
+            dataType: "json",
+            url: "/team/getClassList",
+            data: {
+                gradeId: gradeId
+            },
+            success: function (datas) {
+                var teamsOptions;
+                document.getElementById("classId").options.length = 0;
+                var teamsOptions = "<option value=''>==选择班级==</option>";
+                for (var i = 0; i < datas.length; i++) {
+                    var d = datas[i];
+                    teamsOptions += "<option value='" + d.classId + "'>" + d.className + "</option>";
+                }
+                $("#classId").append(teamsOptions);
+            }
+        });
+    }
+</script>

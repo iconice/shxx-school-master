@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sjht.school.football.dao.football.event.EventPlayersDao">
+
+    <update id="updatePlayersScore">
+        UPDATE `football_con_event_players`
+        SET
+        `score` = score + #{ew.score},
+        `update_time` = CURRENT_TIMESTAMP
+        WHERE
+            id = #{ew.id}
+    </update>
+
+    <select id="getPlayerScoreList" resultType="com.sjht.school.football.entity.football.event.EventPlayersEntity">
+        SELECT
+            ep.team_id AS teamId,
+            ep.student_id AS studentId,
+            ep.score
+        FROM
+            football_con_event_players ep
+        WHERE
+            ep.score > 0
+            AND ep.event_id = #{eventId}
+            AND ep.team_id = #{teamId}
+    </select>
+
+    <select id="getSeasonLeaderboardList" resultType="com.sjht.school.football.resp.football.statistical.GetSeasonLeaderboardListResp">
+        SELECT
+            temp.studentId,
+            s.`name` AS studentName,
+            temp.score,
+            t.team_name AS teamName,
+            c.class_name AS className
+        FROM
+            (
+            SELECT
+                ep.student_id AS studentId,
+                ep.team_id AS teamId,
+                SUM( ep.score ) AS score
+            FROM
+                football_base_event e
+                INNER JOIN football_con_event_players ep ON e.id = ep.event_id
+                INNER JOIN football_base_team t ON ep.team_id = t.id
+                INNER JOIN base_student s ON s.id = ep.student_id
+            WHERE
+                e.season_id = #{params.seasonId}
+                <if test="params.gradeId != null">
+                    AND e.grade_id = #{params.gradeId}
+                </if>
+                <if test="params.category == 3">
+                    AND e.class_id = #{params.classId}
+                </if>
+                <if test="params.category != null">
+                    AND e.category = #{params.category}
+                </if>
+            GROUP BY
+                ep.student_id, ep.team_id
+            ) AS temp
+            INNER JOIN base_student s ON temp.studentId = s.id
+            INNER JOIN football_base_team t ON temp.teamId = t.id
+            INNER JOIN base_class c ON s.class_id = c.id
+        ORDER BY
+            temp.score DESC
+    </select>
+
+    <select id="getSeasonLeaderboardListCount" resultType="long">
+        SELECT
+          COUNT(*)
+        FROM
+        (
+            SELECT
+                ep.student_id AS studentId,
+                ep.team_id AS teamId,
+                SUM( ep.score ) AS score
+            FROM
+              football_base_event e
+            INNER JOIN football_con_event_players ep ON e.id = ep.event_id
+            INNER JOIN football_base_team t ON ep.team_id = t.id
+            INNER JOIN base_student s ON s.id = ep.student_id
+            WHERE
+              e.season_id = #{params.seasonId}
+            <if test="params.gradeId != null">
+                AND e.grade_id = #{params.gradeId}
+            </if>
+            <if test="params.category == 3">
+                AND e.class_id = #{params.classId}
+            </if>
+            <if test="params.category != null">
+                AND e.category = #{params.category}
+            </if>
+            GROUP BY
+            ep.student_id, ep.team_id
+        ) AS temp
+        ORDER BY temp.score DESC
+    </select>
+
+    <select id="getBatchNo" resultType="String">
+        SELECT
+            e.batch_no
+        FROM
+            football_base_event e
+            INNER JOIN football_con_event_players ep ON e.id = ep.event_id
+        WHERE
+            e.season_id = #{params.seasonId}
+            AND ep.student_id = #{params.studentId}
+            AND e.`status` = '2'
+            ORDER BY e.batch_no DESC
+            LIMIT 1
+    </select>
+</mapper>
